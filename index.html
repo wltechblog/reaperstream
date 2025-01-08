@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Car List</title>
+    </head>
+    <body class="bg-gray-100 flex flex-col items-center py-6">
+        <div class="w-full max-w-4xl">
+            <h1 class="text-2xl font-bold mb-4 text-center">Car List</h1>
+
+            <div class="mb-4">
+                <label
+                    for="maxEntries"
+                    class="block text-sm font-medium text-gray-700"
+                    >Max Entries:</label
+                >
+                <input
+                    type="number"
+                    id="maxEntries"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="Enter max number of entries"
+                    value="10"
+                />
+            </div>
+
+            <div
+                id="carList"
+                class="space-y-4 bg-white p-4 rounded-lg shadow-md border border-gray-300"
+            ></div>
+        </div>
+
+        <script>
+            const ws = new WebSocket("/ws");
+            const carList = document.getElementById("carList");
+            const maxEntriesInput = document.getElementById("maxEntries");
+
+            let maxEntries = 10;
+            maxEntriesInput.addEventListener("input", () => {
+                maxEntries = parseInt(maxEntriesInput.value, 10) || Infinity;
+                updateDisplay();
+            });
+
+            const cars = [];
+
+            ws.onmessage = (event) => {
+                const car = JSON.parse(event.data);
+                cars.unshift(car);
+                if (cars.length > maxEntries) {
+                    cars.pop();
+                }
+                updateDisplay();
+            };
+
+            function updateDisplay() {
+                carList.innerHTML = "";
+                cars.slice(0, maxEntries).forEach((car) => {
+                    const carEntry = document.createElement("div");
+                    carEntry.className =
+                        "flex flex-col sm:flex-row items-start sm:items-center bg-gray-50 p-4 rounded shadow-md border border-gray-200";
+
+                    const carImage = document.createElement("a");
+                    carImage.href = car.Filename;
+                    carImage.target = "_blank";
+                    carImage.className = "sm:mr-4 mb-4 sm:mb-0 flex-shrink-0";
+                    const image = document.createElement("img");
+                    image.src = car.Filename;
+                    image.alt = "Car Image";
+                    image.className =
+                        "w-32 h-32 object-cover rounded border border-gray-300";
+                    carImage.appendChild(image);
+
+                    const carInfo = document.createElement("div");
+                    carInfo.className =
+                        "flex flex-col text-sm text-gray-700 space-y-1";
+
+                    carInfo.innerHTML = `
+                    <p><strong>Color:</strong> ${car.ColorName}</p>
+                    <p><strong>Engine Time Delay:</strong> ${car.EngineTimeDelay}</p>
+                    <p><strong>Maker:</strong> ${car.MakerName}</p>
+                    <p><strong>Model:</strong> ${car.ModelName}</p>
+                    <p><strong>Satellites (GPS):</strong> ${car.NumSatellitesGPS}</p>
+                    <p><strong>Use Cache GPS:</strong> ${car.UseCacheGPS}</p>
+                    <p><strong>License Plate:</strong> ${car.LicensePlate || "N/A"}</p>
+                    <p><strong>UUID:</strong> ${car.UUID}</p>
+                    <p><strong>Server:</strong> ${car.Server}</p>
+                `;
+
+                    carEntry.appendChild(carImage);
+                    carEntry.appendChild(carInfo);
+
+                    carList.appendChild(carEntry);
+                });
+            }
+
+            ws.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+        </script>
+    </body>
+</html>
