@@ -4,6 +4,8 @@ This software is provided for educational purposes only. Please don't use this f
 
 # what is it
 
+See my video discussing and demonstrating this: https://youtu.be/pgaUoboK0XY
+
 Recently it has been discovered that law enforcement automatic license plate readers have been deployed with publicly accessible endpoints. This software is a proof of concept to show how easy it is to scrape these endpoints for data.
 
 # where are these readers?
